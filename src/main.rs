@@ -18,7 +18,7 @@ enum State {
     Glitch,
 }
 
-fn display_logo() {
+fn display_logo(color: &color::Fg<color::Rgb>) {
     let height_lines = LOGO.len() as u16;
     let term_size = termion::terminal_size().unwrap();
 
@@ -32,7 +32,7 @@ fn display_logo() {
         println!(
             "{}{}{}",
             termion::cursor::Goto(row, col),
-            color::Fg(color::Green),
+            color,
             line
         );
     }
@@ -48,13 +48,21 @@ fn rnd_screen_pos(size: u16) -> u16 {
 
 fn glitch_logo() {
     let term_size = termion::terminal_size().unwrap();
+    let height_lines = LOGO.len() as u16;
 
     for line in LOGO.iter().chain(LOGO.iter()) {
+
+        let max_width = term_size.0 - line.len() as u16;
+        let max_height =   ((term_size.1 / 2 - height_lines / 2)..(term_size.1 / 2 + height_lines / 2));
+
+
         println!(
             "{}{}{}",
             termion::cursor::Goto(
-                rnd_screen_pos(term_size.0),
-                rnd_screen_pos(term_size.1)
+                fastrand::u16(1..max_width),
+                fastrand::u16(max_height)
+                //rnd_screen_pos(term_size.0),
+                //rnd_screen_pos(term_size.1)
             ),
             color::Fg(color::Rgb(
                 rnd_byte(),
@@ -65,6 +73,14 @@ fn glitch_logo() {
         );
     }
 }
+
+fn gen_rgb_color () -> color::Fg<color::Rgb> {
+    color::Fg(color::Rgb(
+        rnd_byte(),
+        rnd_byte(),
+        rnd_byte(),
+    ))
+}
 fn main() {
     let mut state = State::Glitch;
     let mut tick = 0;
@@ -73,11 +89,13 @@ fn main() {
     let disiplay_ticks = 3000 / 50;
     let glitch_ticks = 500 / 50;
 
+    let mut color = gen_rgb_color();
+
     loop {
         println!("{}", termion::clear::All);
 
         match state {
-            State::Display => display_logo(),
+            State::Display => display_logo(&color),
             State::Glitch => glitch_logo(),
         }
 
@@ -94,6 +112,7 @@ fn main() {
                 if tick % glitch_ticks == 0 {
                     state = State::Display;
                     tick = 0;
+                    color = gen_rgb_color();
                 }
             }
         }
