@@ -11,7 +11,6 @@ const LOGO : &[&str] = &[
     "    \\_/       |__/   \\______/  \\______/        \\______/     |__/    |_______/ |________/|__/  |__/         |__/   |________/|__/  |__/|__/     |__/",
 ];
 
-use rand::{prelude::ThreadRng, RngCore};
 use termion::color;
 
 enum State {
@@ -39,29 +38,28 @@ fn display_logo() {
     }
 }
 
-fn rnd_byte(rng: &mut ThreadRng) -> u8 {
-    (rng.next_u32() % 256) as u8
+fn rnd_byte() -> u8 {
+    fastrand::u8(..)
 }
 
-fn rnd_screen_pos(rng: &mut ThreadRng, size: u16) -> u16 {
-    (rng.next_u32() % size as u32) as u16 + 1
+fn rnd_screen_pos(size: u16) -> u16 {
+    fastrand::u16(1..size)
 }
 
 fn glitch_logo() {
     let term_size = termion::terminal_size().unwrap();
-    let mut rng = rand::thread_rng();
 
     for line in LOGO.iter().chain(LOGO.iter()) {
         println!(
             "{}{}{}",
             termion::cursor::Goto(
-                rnd_screen_pos(&mut rng, term_size.0),
-                rnd_screen_pos(&mut rng, term_size.1)
+                rnd_screen_pos(term_size.0),
+                rnd_screen_pos(term_size.1)
             ),
             color::Fg(color::Rgb(
-                rnd_byte(&mut rng),
-                rnd_byte(&mut rng),
-                rnd_byte(&mut rng),
+                rnd_byte(),
+                rnd_byte(),
+                rnd_byte(),
             )),
             line
         );
